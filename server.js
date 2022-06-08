@@ -8,6 +8,8 @@ const path = require("path");
 const bcrypt = require("bcrypt");
 const User = require("./models/user");
 const contenedorMongoose = require("./cont/mongoCont");
+const config = require("./config");
+const { fork } = require("child_process");
 
 const passport = require("passport");
 const { Strategy } = require("passport-local");
@@ -20,8 +22,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const MongoStore = connectMongo.create({
-  mongoUrl:
-    "mongodb+srv://ferru:ferru2647@cluster0.lpvnv.mongodb.net/myFirstDatabase?retryWrites=true&w=majority",
+  mongoUrl: config.KEY,
   ttl: 600,
 });
 
@@ -180,8 +181,8 @@ app.get("/logged", (req, res) => {
   console.log("logged req.user: ", req.session.passport.user);
   console.log(req.session.passport);
   const datosUsuario = {
-    nombre: req.user.username,
-    direccion: req.user.email,
+    nombre: req.session.passport.user.username,
+    direccion: req.session.passport.user.email,
   };
   res.render("logged", { contador: req.user.contador, datos: datosUsuario });
 });
@@ -191,7 +192,30 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-const PORT = 8080;
+app.get("/info", (req, res) => {
+  let inf = [
+    process.platform,
+    process.version,
+    process.memoryUsage(),
+    process.cwd(),
+    process.pid,
+  ];
+  console.log(inf);
+});
+
+app.get("/api/randoms/:max", (req, res) => {
+  const ran = fork("child.js");
+
+  ran.on("message", (msg) => {
+    if (msg == "listo") {
+      ran.send(req.params.max);
+    } else {
+      res.send(msg);
+    }
+  });
+});
+
+const PORT = config.PORT;
 app.listen(PORT, () => {
   console.log(`Servidor express escuchando en el puerto ${PORT}`);
 });
