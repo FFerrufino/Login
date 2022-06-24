@@ -1,0 +1,62 @@
+PS C:\Users\franc\Desktop\Test> npm start
+
+> test@1.0.0 start
+> 0x server.js
+
+ProfilingServidor escuchando en el puerto 8080
+Success
+
+PS C:\Users\franc\Desktop\Test> curl -X GET "http://localhost:8080/newUser?username=dani&password=qwerty123"
+OK
+PS C:\Users\franc\Desktop\Test> npm test
+
+> test@1.0.0 test
+> node benchmark.js
+
+Running all benchmarks in parallel ...
+Running 20s test @ http://localhost:8000/auth-bloq?username=dani&password=qwerty123
+100 connections
+
+
+┌─────────┬──────┬──────┬───────┬──────┬──────┬───────┬──────┐
+│ Stat    │ 2.5% │ 50%  │ 97.5% │ 99%  │ Avg  │ Stdev │ Max  │
+├─────────┼──────┼──────┼───────┼──────┼──────┼───────┼──────┤
+│ Latency │ 0 ms │ 0 ms │ 0 ms  │ 0 ms │ 0 ms │ 0 ms  │ 0 ms │
+└─────────┴──────┴──────┴───────┴──────┴──────┴───────┴──────┘
+┌───────────┬─────┬──────┬─────┬───────┬─────┬───────┬─────┐
+│ Stat      │ 1%  │ 2.5% │ 50% │ 97.5% │ Avg │ Stdev │ Min │
+├───────────┼─────┼──────┼─────┼───────┼─────┼───────┼─────┤
+│ Req/Sec   │ 0   │ 0    │ 0   │ 0     │ 0   │ 0     │ 0   │
+├───────────┼─────┼──────┼─────┼───────┼─────┼───────┼─────┤
+│ Bytes/Sec │ 0 B │ 0 B  │ 0 B │ 0 B   │ 0 B │ 0 B   │ 0 B │
+└───────────┴─────┴──────┴─────┴───────┴─────┴───────┴─────┘
+
+Req/Bytes counts sampled once per second.
+# of samples: 20
+
+58k requests in 20.19s, 0 B read
+57k errors (0 timeouts)
+Running 20s test @ http://localhost:8000/auth-nobloq?username=dani&password=qwerty123100 connections
+
+
+┌─────────┬──────┬──────┬───────┬──────┬──────┬───────┬──────┐
+│ Stat    │ 2.5% │ 50%  │ 97.5% │ 99%  │ Avg  │ Stdev │ Max  │
+├─────────┼──────┼──────┼───────┼──────┼──────┼───────┼──────┤
+│ Latency │ 0 ms │ 0 ms │ 0 ms  │ 0 ms │ 0 ms │ 0 ms  │ 0 ms │
+└─────────┴──────┴──────┴───────┴──────┴──────┴───────┴──────┘
+┌───────────┬─────┬──────┬─────┬───────┬─────┬───────┬─────┐
+│ Stat      │ 1%  │ 2.5% │ 50% │ 97.5% │ Avg │ Stdev │ Min │
+├───────────┼─────┼──────┼─────┼───────┼─────┼───────┼─────┤
+│ Req/Sec   │ 0   │ 0    │ 0   │ 0     │ 0   │ 0     │ 0   │
+├───────────┼─────┼──────┼─────┼───────┼─────┼───────┼─────┤
+│ Bytes/Sec │ 0 B │ 0 B  │ 0 B │ 0 B   │ 0 B │ 0 B   │ 0 B │
+└───────────┴─────┴──────┴─────┴───────┴─────┴───────┴─────┘
+
+Req/Bytes counts sampled once per second.
+# of samples: 20
+
+58k requests in 20.18s, 0 B read
+57k errors (0 timeouts)
+
+Flamegraph generated in
+file://C:\Users\franc\Desktop\Test\1648.0x\flamegraph.html

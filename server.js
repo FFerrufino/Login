@@ -10,6 +10,12 @@ const User = require("./models/user");
 const contenedorMongoose = require("./cont/mongoCont");
 const config = require("./config");
 const { fork } = require("child_process");
+const cluster = require("cluster");
+const http = require("http");
+const numCPUs = require("os").cpus().length;
+const compression = require("express");
+const log4js = require("log4js");
+const crypto = require("crypto");
 
 const passport = require("passport");
 const { Strategy } = require("passport-local");
@@ -25,6 +31,70 @@ const MongoStore = connectMongo.create({
   mongoUrl: config.KEY,
   ttl: 600,
 });
+
+// LOGS
+
+log4js.configure({
+  appenders: {
+    consola: { type: "console" },
+    archivoW: { type: "file", filename: "warnings.log" },
+    archivoE: { type: "file", filename: "errors.log" },
+
+    loggerConsola: {
+      type: "logLevelFilter",
+      appender: "consola",
+      level: "info",
+    },
+    loggerArchivoW: {
+      type: "logLevelFilter",
+      appender: "archivoW",
+      level: "warning",
+    },
+    loggerArchivoE: {
+      type: "logLevelFilter",
+      appender: "archivoE",
+      level: "error",
+    },
+  },
+  categories: {
+    default: {
+      appenders: ["loggerConsola"],
+      level: "all",
+    },
+    file: {
+      appenders: ["loggerArchivoW"],
+      level: "all",
+    },
+    file2: {
+      appenders: ["loggerArchivoE"],
+      level: "all",
+    },
+  },
+});
+
+const logger = log4js.getLogger();
+const loggerError = log4js.getLogger("file2");
+const loggerWarning = log4js.getLogger("file");
+
+// Cluster
+
+// if (cluster.isMaster) {
+//   console.log(`I am a master ${process.pid}`);
+//   for (let i = 0; i < numCPUs; i++) {
+//     cluster.fork();
+//   }
+//   cluster.on("listening", (worker, address) => {
+//     console.log(`${worker.process.pid} es listening in port ${address.port}`);
+//   });
+// } else {
+//   http
+//     .createServer((req, res) => {
+//       res.writeHead(200);
+//       res.end("Hola mundo");
+//     })
+//     .listen(8000);
+//   console.log(`Worker ${process.pid} started`);
+// }
 
 // Motor de plantillas
 app.set("views", path.join(path.dirname(""), "./src/views"));
@@ -128,6 +198,7 @@ passport.deserializeUser(async (nombre, done) => {
 });
 
 //Rutas
+app.use(compression());
 
 app.get("/", (req, res) => {
   if (req.session.username) {
@@ -200,6 +271,9 @@ app.get("/info", (req, res) => {
     process.cwd(),
     process.pid,
   ];
+  logger.info("");
+  loggerWarning.warn();
+  loggerError.error();
   console.log(inf);
 });
 
@@ -214,8 +288,47 @@ app.get("/api/randoms/:max", (req, res) => {
     }
   });
 });
+const users = {};
+app.get("/newUser", (req, res) => {
+  let username = req.query.username || "";
+  const password = req.query.password || "";
+
+  username = username.replace(/[!@#$%^&*]/g, "");
+
+  if (!username || !password || users[username]) {
+    return res.sendStatus(400);
+  }
+
+  const salt = crypto.randomBytes(128).toString("base64");
+  const hash = crypto.pbkdf2Sync(password, salt, 10000, 512, "sha512");
+
+  users[username] = { salt, hash };
+  console.log("Success");
+  res.sendStatus(200);
+});
+app.get("/auth-bloq", (req, res) => {
+  let username = req.query.username || "";
+  const password = req.query.password || "";
+
+  username = username.replace(/[!@#$%^&*]/g, "");
+
+  if (!username || !password || !users[username]) {
+    process.exit(1);
+    return res.sendStatus(400);
+  }
+
+  const { salt, hash } = users[username];
+  const encryptHash = crypto.pbkdf2Sync(password, salt, 10000, 512, "sha512");
+
+  if (crypto.timingSafeEqual(hash, encryptHash)) {
+    res.sendStatus(200);
+  } else {
+    process.exit(1);
+    res.sendStatus(401);
+  }
+});
 
 const PORT = config.PORT;
-app.listen(PORT, () => {
+app.listen(8080, () => {
   console.log(`Servidor express escuchando en el puerto ${PORT}`);
 });

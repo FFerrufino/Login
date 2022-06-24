@@ -6,8 +6,8 @@ function param(p) {
   return process.argv[index + 1];
 }
 const port = param("--port");
-console.log(process.env.PORT);
-console.log(port || process.env.PORT);
+// console.log(process.env.PORT);
+// console.log(port || process.env.PORT);
 
 module.exports = {
   KEY: process.env.KEY,
